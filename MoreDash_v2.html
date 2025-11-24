@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Racing Dashboard Simulator</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Orbitron for that digital racing look -->
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        body {
+            background-color: #050505;
+            color: white;
+            font-family: 'Orbitron', sans-serif;
+            overflow: hidden; /* Prevent scrolling for dashboard feel */
+        }
+
+        /* Custom Scrollbar hide */
+        ::-webkit-scrollbar { display: none; }
+
+        /* Neon Glow Effects */
+        .glow-text-red { text-shadow: 0 0 10px rgba(255, 0, 0, 0.8); }
+        .glow-text-green { text-shadow: 0 0 10px rgba(0, 255, 0, 0.8); }
+        .glow-text-blue { text-shadow: 0 0 10px rgba(0, 100, 255, 0.8); }
+        
+        .led {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #222;
+            box-shadow: inset 0 0 5px #000;
+            transition: background-color 0.05s, box-shadow 0.05s;
+        }
+        
+        .led.active-blue { background: #00f; box-shadow: 0 0 15px #00f; }
+        .led.active-green { background: #0f0; box-shadow: 0 0 15px #0f0; }
+        .led.active-yellow { background: #ff0; box-shadow: 0 0 15px #ff0; }
+        .led.active-red { background: #f00; box-shadow: 0 0 15px #f00; }
+
+        /* Custom Borders for Panels */
+        .panel-border {
+            border: 1px solid #333;
+            border-radius: 4px;
+            background: rgba(20, 20, 20, 0.5);
+        }
+
+        /* Tire Indicator Styles */
+        .tire-rect {
+            width: 40px;
+            height: 60px;
+            background: linear-gradient(90deg, #111 0%, #333 30%, #333 70%, #111 100%);
+            border-radius: 4px;
+            border: 1px solid #444;
+            position: relative;
+        }
+        .tire-wear-bar {
+            position: absolute;
+            right: -5px;
+            top: 10%;
+            height: 80%;
+            width: 3px;
+            background-color: #ff0; /* Yellow for soft/med */
+        }
+
+        /* Utility for exact font sizing to match image */
+        .text-xxs { font-size: 0.6rem; }
+    </style>
+</head>
+<body class="flex flex-col h-screen p-2 select-none">
+
+    <!-- TOP SECTION: RPM LEDs -->
+    <div class="w-full flex justify-center items-center gap-2 mb-2 p-2 bg-black/50 rounded-lg" id="led-container">
+        <!-- LEDs will be injected by JS -->
+    </div>
+
+    <!-- MAIN DASHBOARD GRID -->
+    <div class="flex-1 grid grid-cols-12 gap-1 h-full">
+
+        <!-- LEFT PANEL: Tyres & Car Settings -->
+        <div class="col-span-12 md:col-span-4 flex flex-col gap-1">
+            
+            <!-- Tyres Panel -->
+            <div class="panel-border flex-1 p-4 relative">
+                <!-- Top Arrows -->
+                <div class="absolute top-2 left-2 text-orange-500 font-bold text-2xl"><i class="fas fa-angles-left"></i></div>
+                
+                <div class="h-full flex flex-col justify-center gap-6">
+                    <!-- Front Tyres -->
+                    <div class="flex justify-between items-center px-4">
+                        <!-- FL -->
+                        <div class="text-right">
+                            <div class="text-gray-400 text-2xl font-bold">100°</div>
+                            <div class="text-gray-300 text-sm"><span id="fl-psi">24.5</span> Psi</div>
+                        </div>
+                        <div class="tire-rect"><div class="tire-wear-bar bg-yellow-400"></div></div>
+                        
+                        <!-- FR -->
+                        <div class="tire-rect"><div class="tire-wear-bar bg-yellow-400" style="left: -5px; right: auto;"></div></div>
+                        <div class="text-left">
+                            <div class="text-gray-400 text-2xl font-bold">100°</div>
+                            <div class="text-gray-300 text-sm"><span id="fr-psi">24.5</span> Psi</div>
+                        </div>
+                    </div>
+
+                    <!-- Compound Text -->
+                    <div class="text-center text-xs text-white tracking-widest font-mono">
+                        SLICK <span class="bg-white text-black px-1 font-bold">SOFT</span>
+                    </div>
+
+                    <!-- Rear Tyres -->
+                    <div class="flex justify-between items-center px-4">
+                        <!-- RL -->
+                        <div class="text-right">
+                            <div class="text-gray-400 text-2xl font-bold">98°</div>
+                            <div class="text-gray-300 text-sm"><span id="rl-psi">23.0</span> Psi</div>
+                        </div>
+                        <div class="tire-rect"><div class="tire-wear-bar bg-yellow-400"></div></div>
+                        
+                        <!-- RR -->
+                        <div class="tire-rect"><div class="tire-wear-bar bg-yellow-400" style="left: -5px; right: auto;"></div></div>
+                        <div class="text-left">
+                            <div class="text-gray-400 text-2xl font-bold">99°</div>
+                            <div class="text-gray-300 text-sm"><span id="rr-psi">23.0</span> Psi</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Bottom Temp Numbers -->
+                    <div class="flex justify-between px-10 text-yellow-500 font-bold text-lg">
+                        <span>600</span>
+                        <span>600</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bottom Left: Settings Bars -->
+            <div class="grid grid-cols-5 gap-1 h-24">
+                <div class="border border-white bg-black flex flex-col justify-between p-1">
+                    <span class="text-xxs text-white text-center">BRAKE B.</span>
+                    <span class="text-2xl text-white font-bold text-center">50.0</span>
+                </div>
+                <div class="border border-yellow-500 bg-black flex flex-col justify-between p-1">
+                    <span class="text-xxs text-white text-center">ABS</span>
+                    <span class="text-3xl text-white font-bold text-center">10</span>
+                </div>
+                <div class="border border-cyan-500 bg-black flex flex-col justify-between p-1">
+                    <span class="text-xxs text-white text-center">TC</span>
+                    <span class="text-3xl text-white font-bold text-center">11</span>
+                </div>
+                <div class="border border-purple-500 bg-black flex flex-col justify-between p-1">
+                    <span class="text-xxs text-white text-center">TC-2</span>
+                    <span class="text-3xl text-white font-bold text-center">12</span>
+                </div>
+                <div class="border border-green-500 bg-black flex flex-col justify-between p-1">
+                    <span class="text-xxs text-white text-center">MAP</span>
+                    <span class="text-3xl text-white font-bold text-center">10</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- CENTER PANEL: Gear & Speed -->
+        <div class="col-span-12 md:col-span-4 flex flex-col gap-1">
+            <div class="panel-border flex-1 flex flex-col items-center justify-center relative">
+                <!-- Top Value -->
+                <div class="text-4xl font-bold text-white mb-4">0</div>
+                
+                <div class="w-full border-t border-gray-600 mb-2"></div>
+                
+                <div class="text-sm text-gray-400 self-start ml-4">GEAR</div>
+                
+                <!-- Main Gear Display -->
+                <div class="text-[180px] leading-none font-bold text-white italic" id="gear-display">N</div>
+                
+                <div class="text-sm text-gray-400 self-start ml-4 mt-4">KM/H</div>
+                
+                <!-- Speed Display -->
+                <div class="text-6xl font-bold text-white italic" id="speed-display">0</div>
+            </div>
+            
+            <!-- Center Bottom: Icons Grid -->
+            <div class="h-24 grid grid-cols-3 gap-1 bg-black p-1">
+                 <!-- Row 1 -->
+                 <div class="flex justify-center items-center text-orange-500 border border-gray-800"><i class="fas fa-lightbulb"></i></div>
+                 <div class="flex justify-center items-center text-green-500 border border-gray-800"><i class="fas fa-car-side"></i></div>
+                 <div class="flex justify-center items-center text-blue-500 border border-gray-800"><i class="fas fa-bolt"></i></div>
+                 <!-- Row 2 -->
+                 <div class="flex justify-center items-center text-orange-500 border border-gray-800"><i class="fas fa-exclamation-circle"></i></div>
+                 <div class="flex justify-center items-center text-orange-500 border border-gray-800"><i class="fas fa-engine-warning"></i></div>
+                 <div class="flex justify-center items-center text-blue-300 border border-gray-800"><i class="fas fa-wind"></i></div>
+            </div>
+        </div>
+
+        <!-- RIGHT PANEL: Timing & Session -->
+        <div class="col-span-12 md:col-span-4 flex flex-col gap-1">
+            
+            <!-- Timing Panel -->
+            <div class="panel-border flex-1 p-4 relative">
+                <!-- Top Arrows -->
+                <div class="absolute top-2 right-2 text-orange-500 font-bold text-2xl"><i class="fas fa-angles-right"></i></div>
+
+                <!-- Delta / Gain Loss -->
+                <div class="text-center mb-6">
+                    <div class="text-xs uppercase tracking-widest mb-1">LAP GAIN / LOSS</div>
+                    <div class="text-5xl font-bold text-red-500 glow-text-red transition-all duration-200" id="delta-display">+0.45</div>
+                    <!-- Simple bar graphic -->
+                    <div class="w-full h-2 bg-gray-800 mt-2 rounded overflow-hidden flex justify-center">
+                        <div class="w-1 h-full bg-white"></div> <!-- Center marker -->
+                        <div class="h-full bg-red-600" style="width: 20%; margin-left: 2px;"></div>
+                    </div>
+                </div>
+
+                <!-- Times Grid -->
+                <div class="grid grid-cols-3 gap-y-4 text-right items-center">
+                    <div class="col-span-1 text-left text-lg text-white font-bold">TIME</div>
+                    <div class="col-span-2 text-4xl text-white font-mono" id="current-time">01:27.45</div>
+
+                    <div class="col-span-1 text-left text-lg text-white font-bold">BEST</div>
+                    <div class="col-span-2 text-4xl text-green-500 glow-text-green font-mono">01:26.34</div>
+
+                    <div class="col-span-1 text-left text-lg text-white font-bold">LAST</div>
+                    <div class="col-span-2 text-4xl text-white font-mono" id="last-time">00:00.01</div>
+                </div>
+
+                <!-- Bottom Arrows/Stats -->
+                <div class="mt-8 flex justify-between items-end text-white text-xl font-mono">
+                    <div class="text-center">
+                        <div class="text-xs text-gray-400">1</div>
+                        <div>99.9</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-xs text-gray-400">^</div>
+                        <div>+99.9</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-xs text-gray-400">v</div>
+                        <div>-99.9</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bottom Right: Session & Fuel -->
+            <div class="h-24 bg-black border-t border-gray-800 flex flex-col">
+                <!-- Session Data Header -->
+                <div class="flex justify-between px-2 text-xxs text-gray-400 uppercase mt-1">
+                    <span>Session Time</span>
+                    <span>Pos</span>
+                    <span>Lap</span>
+                </div>
+                <!-- Session Data Values -->
+                <div class="flex justify-between px-2 text-2xl font-bold mb-1 border-b border-gray-700 pb-1">
+                    <span id="session-time">00:23:14</span>
+                    <span>99<span class="text-yellow-500 text-sm">/26</span></span>
+                    <span>99<span class="text-yellow-500 text-sm">/42</span></span>
+                </div>
+
+                <!-- Fuel Footer -->
+                <div class="flex items-center flex-1 px-2 gap-2">
+                    <div class="bg-orange-500 text-black p-1 rounded"><i class="fas fa-gas-pump"></i></div>
+                    <div class="flex-1 flex justify-between items-end">
+                        <div class="text-red-500 text-3xl font-bold glow-text-red">999.9</div>
+                        <div class="text-white text-xl">1.2</div>
+                        <div class="bg-green-600 px-2 text-white text-xl font-bold rounded">99.9</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        // --- Configuration & Elements ---
+        const ledContainer = document.getElementById('led-container');
+        const gearDisplay = document.getElementById('gear-display');
+        const speedDisplay = document.getElementById('speed-display');
+        const deltaDisplay = document.getElementById('delta-display');
+        const currentTimeDisplay = document.getElementById('current-time');
+        const lastTimeDisplay = document.getElementById('last-time');
+        const sessionTimeDisplay = document.getElementById('session-time');
+        
+        const flPsi = document.getElementById('fl-psi');
+        const frPsi = document.getElementById('fr-psi');
+        const rlPsi = document.getElementById('rl-psi');
+        const rrPsi = document.getElementById('rr-psi');
+
+        // --- Init LEDs ---
+        // 15 LEDs total for the top bar
+        const totalLeds = 19; 
+        const leds = [];
+        
+        for(let i=0; i<totalLeds; i++) {
+            const led = document.createElement('div');
+            led.className = 'led';
+            ledContainer.appendChild(led);
+            leds.push(led);
+        }
+
+        // --- State Variables ---
+        let startTime = Date.now();
+        let sessionStart = Date.now() - (23 * 60 * 1000) - (14 * 1000); // Start 23m 14s in
+        let lapStart = Date.now();
+        let rpm = 0;
+        let speed = 0;
+        let gear = 1;
+        let rpmDirection = 1; // 1 for up, -1 for down
+
+        // Base tire pressures
+        const basePsi = { fl: 24.5, fr: 24.5, rl: 23.0, rr: 23.0 };
+
+        // --- Helper Functions ---
+        function padZero(num, size = 2) {
+            let s = num.toString();
+            while (s.length < size) s = "0" + s;
+            return s;
+        }
+
+        function formatTime(ms) {
+            const date = new Date(ms);
+            const m = padZero(date.getUTCMinutes());
+            const s = padZero(date.getUTCSeconds());
+            const msStr = padZero(Math.floor(date.getUTCMilliseconds() / 10)); // 2 digits
+            return `${m}:${s}.${msStr}`;
+        }
+        
+        function formatSessionTime(ms) {
+            const totalSec = Math.floor(ms / 1000);
+            const h = padZero(Math.floor(totalSec / 3600));
+            const m = padZero(Math.floor((totalSec % 3600) / 60));
+            const s = padZero(totalSec % 60);
+            return `${h}:${m}:${s}`;
+        }
+
+        // --- Update Loop ---
+        function updateDashboard() {
+            const now = Date.now();
+
+            // 1. Update Times
+            const currentLapMs = now - lapStart;
+            currentTimeDisplay.textContent = formatTime(currentLapMs);
+            sessionTimeDisplay.textContent = formatSessionTime(now - sessionStart);
+
+            // 2. Simulate RPM & Speed
+            // RPM goes up and down to simulate acceleration/shifting
+            rpm += 150 * rpmDirection;
+            if (rpm > 12000) {
+                rpmDirection = -1; // Shift point reached, drop RPM
+                gear = gear < 6 ? gear + 1 : 6; // Shift up
+                rpm = 9000; // Drop to
+            } else if (rpm < 4000 && gear > 1) {
+                rpmDirection = 1;
+            } else if (rpm < 3000 && gear === 1) {
+                rpmDirection = 1;
+            }
+
+            // Calc Speed based on Gear and RPM (rough approximation)
+            speed = Math.floor((rpm / 12000) * (gear * 60)); 
+            if(gear === 0) speed = 0;
+
+            gearDisplay.textContent = gear;
+            speedDisplay.textContent = speed;
+
+            // 3. Update LEDs
+            // Pattern: Outer Blue -> Inner Green -> Center Red
+            // 19 LEDs. Center is index 9. 
+            // 0-4: Blue, 5-8: Green, 9: Red, 10-13: Green, 14-18: Blue
+            // Actually, prompt says: "Blue from left and right then going towards the middle"
+            // Let's map RPM % to how many LEDs are lit from outside in.
+            
+            const rpmPercent = Math.max(0, (rpm - 5000) / 7000); // Active range 5k-12k
+            const ledsToLight = Math.floor(rpmPercent * Math.ceil(totalLeds / 2)); 
+            
+            // Clear all
+            leds.forEach(l => l.className = 'led');
+
+            // Light up based on logic
+            for (let i = 0; i < ledsToLight; i++) {
+                // Left side index
+                const leftIdx = i;
+                // Right side index
+                const rightIdx = totalLeds - 1 - i;
+
+                let colorClass = 'active-blue';
+                // If we are close to center (higher RPM), change color
+                if (i > 3) colorClass = 'active-green';
+                if (i > 6) colorClass = 'active-yellow';
+                if (i > 8) colorClass = 'active-red'; // The center one
+
+                if (leftIdx <= rightIdx) {
+                    leds[leftIdx].classList.add(colorClass);
+                    leds[rightIdx].classList.add(colorClass);
+                }
+            }
+            
+            // Flash all red at max RPM
+            if (rpm > 11800) {
+                leds.forEach(l => {
+                    l.className = 'led active-red';
+                });
+            }
+
+            // 4. Delta Animation
+            // Sine wave to oscillate between +0.40 and +0.50
+            const deltaVal = 0.45 + (Math.sin(now / 500) * 0.05);
+            deltaDisplay.textContent = (deltaVal > 0 ? "+" : "") + deltaVal.toFixed(2);
+            // Change color if negative (green) or positive (red)
+            if (deltaVal < 0) {
+                deltaDisplay.className = "text-5xl font-bold text-green-500 glow-text-green transition-all duration-200";
+            } else {
+                deltaDisplay.className = "text-5xl font-bold text-red-500 glow-text-red transition-all duration-200";
+            }
+
+            // 5. Tire Pressure Fluctuation (Jitter)
+            if (now % 10 === 0) { // Update less frequently
+                flPsi.innerText = (basePsi.fl + (Math.random() * 0.2 - 0.1)).toFixed(1);
+                frPsi.innerText = (basePsi.fr + (Math.random() * 0.2 - 0.1)).toFixed(1);
+                rlPsi.innerText = (basePsi.rl + (Math.random() * 0.2 - 0.1)).toFixed(1);
+                rrPsi.innerText = (basePsi.rr + (Math.random() * 0.2 - 0.1)).toFixed(1);
+            }
+            
+            // Last time jitter for "alive" feel
+            const lastTimeJitter = 0.01 + (Math.sin(now/1000) * 0.005);
+            // Just keeping static mostly but ensuring format matches
+            
+            requestAnimationFrame(updateDashboard);
+        }
+
+        // Start the engine
+        requestAnimationFrame(updateDashboard);
+
+    </script>
+</body>
+</html>
